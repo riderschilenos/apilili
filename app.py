@@ -1,6 +1,14 @@
 from flask import Flask, render_template, Response
 import cv2
 
+try:
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        raise ValueError("No se pudo abrir la cámara")
+except Exception as e:
+    print(f"⚠️ Advertencia: {e}")
+    cap = None  # No uses la cámara si hay error
+
 app = Flask(__name__)
 
 # Inicializar el clasificador de rostros
