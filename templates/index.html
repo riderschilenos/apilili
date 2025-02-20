@@ -1,10 +1,62 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Streaming de Video con Detección de Rostros</title>
-  </head>
-  <body>
-    <h1>Video en Vivo con Detección de Rostros</h1>
-    <img src="{{ url_for('video_feed') }}" width="640" height="480">
-  </body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detección de Rostros</title>
+</head>
+<body>
+    <h1>Detección de Rostros en Tiempo Real</h1>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="processedVideo" alt="Procesado por el servidor" />
+    <p id="error-message" style="color: red;"></p> <!-- Mensaje de error -->
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const processedVideo = document.getElementById('processedVideo');
+        const errorMessage = document.getElementById('error-message');
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (error) {
+                console.error("Error al acceder a la cámara: ", error);
+                errorMessage.textContent = "⚠️ No se pudo acceder a la cámara. Asegúrate de dar permisos o usa HTTPS.";
+            }
+        }
+
+        function captureAndSend() {
+            if (!video.videoWidth) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('frame', blob, 'frame.jpg');
+
+                fetch('/video_feed', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    processedVideo.src = URL.createObjectURL(blob);
+                })
+                .catch(error => {
+                    console.error("Error enviando frame:", error);
+                    errorMessage.textContent = "⚠️ Error enviando frames al servidor.";
+                });
+            }, 'image/jpeg');
+        }
+
+        startCamera();
+        setInterval(captureAndSend, 100);  // Envía un frame cada 100ms
+    </script>
+</body>
 </html>
