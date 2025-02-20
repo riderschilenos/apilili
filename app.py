@@ -13,7 +13,6 @@ def index():
 
 @app.route('/video_feed', methods=['POST'])
 def video_feed():
-    """Recibe frames desde el navegador y los procesa."""
     if 'frame' not in request.files:
         return "No se recibió frame", 400
 
@@ -25,12 +24,14 @@ def video_feed():
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
+    print(f"Rostros detectados: {len(faces)}")  # 👈 Agregamos esto para depuración
+
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-    # Codificar la imagen con los rostros detectados
     _, buffer = cv2.imencode('.jpg', frame)
     return Response(buffer.tobytes(), mimetype='image/jpeg')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
