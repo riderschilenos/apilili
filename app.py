@@ -4,8 +4,13 @@ import numpy as np
 
 app = Flask(__name__)
 
-# Cargar el clasificador de rostros
+
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+if face_cascade.empty():
+    print("⚠️ Error: No se pudo cargar el clasificador de rostros.")
+else:
+    print("✅ Clasificador cargado correctamente.")
 
 @app.route('/')
 def index():
